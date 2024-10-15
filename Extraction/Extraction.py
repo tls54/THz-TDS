@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.fft import fft
+from transfer_functions import *
 
 c = 299792458  # Speed of light in m/s
 
@@ -130,12 +131,6 @@ class Extractor:
         # Initialize extracted array to be complex and the correct size
         self.n_extracted = np.zeros(self.interpolation, dtype=complex)
         
-        # Define functions
-        def H_th_function(n, w):
-            return (4 * n) / ((n + 1) ** 2) * np.exp(-1j * (n - 1) * w * self.Length / c)
-
-        def H_prime_function(n, w):
-            return (1 / n) - (2 / (n + 1)) - 1j * w * self.Length / c
 
         # Iterate over frequencies
         w = 2 * np.pi * self.f_interp * 1e12  # Angular frequency in radians/sec
