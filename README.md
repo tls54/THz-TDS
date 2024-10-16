@@ -10,10 +10,23 @@ The current implementation uses a basic Newton-Raphson method on an experimental
 - Refractive index calculations
 - Plotting functionalities
 
+## Folders and files
+### Extraction (folder)
+Contains:
+- Extractor.py: hold the class 'Extractor', currently this is a mono class containing all methods for transforming time domian data and extracting material parameters.
+- transfer_functions.py: small file containing definitions for the transfer functions. currently only contains definitions for 0 reflection model.
+
+
 ## Requirements
 - Python 3.9
+- Numpy
+- Pandas
 - Scikit-learn
 - Matplotlib
+
+## Data requirements
+Data being input to the Extractor class/ methods should follow the schematic and structure of the example data sets in the 'Data_sets' folder
+
 
 ## Usage
 1. Clone the repository:
