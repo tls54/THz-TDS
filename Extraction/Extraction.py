@@ -49,9 +49,7 @@ class Extractor:
         # Plot the signals
         plt.figure(figsize=(8,4), dpi=150)
         plt.plot(self.time_ref, self.signal_ref, label="Reference Signal")
-        plt.scatter(self.time_ref, self.signal_ref, s=8)
         plt.plot(self.time_sample, self.signal_sample, label="Sample Signal")
-        plt.scatter(self.time_sample, self.signal_sample, s=8)
         plt.title('Signals in time domain')
         plt.xlabel('Time [ps]')
         plt.ylabel('Signal [nA]')
