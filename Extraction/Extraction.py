@@ -68,15 +68,15 @@ class Extractor:
     def fft_signals(self, interpolation: int = 2**12):
         self.interpolation = interpolation
         # Compute FFTs of both signals with interpolation
-        self.fft_ref = fft(self.signal_ref, interpolation)
-        self.fft_sample = fft(self.signal_sample, interpolation)
+        fft_ref = fft(self.signal_ref, interpolation)
+        fft_sample = fft(self.signal_sample, interpolation)
 
         # Calculate amplitude and phase for both signals
-        self.A_signal_ref = np.abs(self.fft_ref)
-        self.ph_signal_ref = np.unwrap(np.angle(self.fft_ref))
+        self.A_signal_ref = np.abs(fft_ref)
+        self.ph_signal_ref = np.unwrap(np.angle(fft_ref))
 
-        self.A_signal_sample = np.abs(self.fft_sample)
-        self.ph_signal_sample = np.unwrap(np.angle(self.fft_sample))
+        self.A_signal_sample = np.abs(fft_sample)
+        self.ph_signal_sample = np.unwrap(np.angle(fft_sample))
 
         # Adjust frequency array for all possible values from fft
         self.f_interp = np.linspace(self.f[0], self.f[-1], interpolation)
@@ -167,7 +167,7 @@ class Extractor:
         # Plot imaginary part of refractive index (extinction coefficient)
         axs[1].plot(self.f_interp, np.imag(self.n_extracted))
         axs[1].set_xlim([0, 4])
-        axs[1].set_ylim([-0.5, 0.5])
+        #axs[1].set_ylim([-0.5, 0.5])
         axs[1].set_xlabel("Frequency (THz)")
         axs[1].set_ylabel("Extinction coefficient k")
 
