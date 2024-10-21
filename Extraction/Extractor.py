@@ -6,6 +6,7 @@ from .transformations import *
 from .constants import c
 
 
+
 # Create extractor class
 class Extractor:
     def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float) -> None:
@@ -88,7 +89,6 @@ class Extractor:
             self.signal_sample, 
             interpolation
             )
-        
 
 
 
@@ -112,7 +112,8 @@ class Extractor:
         Plots Frequency domain
         '''
         plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample)
-        
+
+
 
     ###--------------------------------------------------------------------------------------------------------
     # fitting method for the refractive index
