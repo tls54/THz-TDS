@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.fft import fft
-from transfer_functions import *
-from plotting import *
+from .transfer_functions import *
+from .plotting import *
+from .constants import c
 
-c = 299792458  # Speed of light in m/s
 
 # Create extractor class
 class Extractor:
@@ -53,10 +53,21 @@ class Extractor:
         plot_time_domain(self.time_ref, self.signal_ref, self.time_sample, self.signal_sample)
 
 
-
     def get_processed_data(self):
-        # Ammend this to be a data frame
-        return self.signal_ref, self.time_ref, self.signal_sample, self.time_sample, self.f
+        '''
+        returns the time domain processed data as a pandas data frame.
+        '''
+        data = {
+            'frequency': self.f,
+            'signal_ref': self.signal_ref,
+            'time_ref': self.time_ref,
+            'signal_sample': self.signal_sample,
+            'time_sample': self.time_sample
+        }
+        processed_data = pd.DataFrame(data)
+        return processed_data
+
+
 
     ###--------------------------------------------------------------------------------------------------------
     # Handles frequency domain data 
@@ -80,14 +91,22 @@ class Extractor:
 
 
     def get_fft_data(self):
-        # Return amplitude, phase, and frequency data
-        return self.f_interp, self.A_signal_ref, self.A_signal_sample, self.ph_signal_ref, self.ph_signal_sample
-
+    # Create a DataFrame for amplitude, phase, and frequency data
+        data = {
+        'interpolated frequency': self.f_interp,
+        'amplitude_signal_ref': self.A_signal_ref,
+        'amplitude_signal_sample': self.A_signal_sample,
+        'phase_signal_ref': self.ph_signal_ref,
+        'phase_signal_sample': self.ph_signal_sample
+        }
+    
+        fft_data = pd.DataFrame(data)
+        return fft_data
 
 
     def plot_frequency_domain(self):
         '''
-        Plot Frequency domain
+        Plots Frequency domain
         '''
         plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample)
         
@@ -128,13 +147,32 @@ class Extractor:
             # Store extracted refractive index
             self.n_extracted[f_index] = n_next
 
+
+
+    # Return refractive index data as dataframe
+
     def get_refractive_index_data(self):
-        # Change to a pandas dataframe
-        """Return the real and imaginary parts of the extracted refractive index."""
-        return np.real(self.n_extracted), np.imag(self.n_extracted)
+        '''
+        Return refractive index as dataframe.
+        '''
+        # Organise data as dict
+        data = {
+        'real_part': np.real(self.n_extracted),
+        'imaginary_part': np.imag(self.n_extracted)
+        }
+    
+        # Convert dict to df
+        refractive_index_data = pd.DataFrame(data)
+
+        return refractive_index_data
+
+
 
     def plot_refractive_index(self):
-        """Plot the real and imaginary parts of the refractive index."""
+        '''
+        Plot the real and imaginary parts of the refractive index.
+        '''
+        # call externally defined plotting fucntion
         plot_refractive_index(self.f_interp, self.n_extracted)
 
 

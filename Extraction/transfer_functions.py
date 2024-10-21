@@ -1,5 +1,5 @@
 import numpy as np
-from Extractor import c
+from .constants import c
 
 ## Define transfer function for no reflection model
 
