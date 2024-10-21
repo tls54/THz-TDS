@@ -22,6 +22,8 @@ def H_th_function(n, w, length):
     '''
     return (4 * n) / ((n + 1) ** 2) * np.exp(-1j * (n - 1) * w * length/ c)
 
+
+
 def H_prime_function(n, w, length):
     '''
     Inputs

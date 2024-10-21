@@ -1,15 +1,14 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from numpy.fft import fft
 from .transfer_functions import *
 from .plotting import *
+from .transformations import *
 from .constants import c
 
 
 # Create extractor class
 class Extractor:
-    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float):
+    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float) -> None:
 
         ### Preprocess time domain data and extract frequency range when the class is first called
 
@@ -53,6 +52,7 @@ class Extractor:
         plot_time_domain(self.time_ref, self.signal_ref, self.time_sample, self.signal_sample)
 
 
+
     def get_processed_data(self):
         '''
         returns the time domain processed data as a pandas data frame.
@@ -72,21 +72,23 @@ class Extractor:
     ###--------------------------------------------------------------------------------------------------------
     # Handles frequency domain data 
 
-    def fft_signals(self, interpolation: int = 2**12):
+    def fft_signals(self, interpolation: int = 2**12) -> None:
+        '''
+        Transforms data using numpy fft.
+        '''
+        # Make interpolation an attribute of the class
         self.interpolation = interpolation
-        # Compute FFTs of both signals with interpolation
-        fft_ref = fft(self.signal_ref, interpolation)
-        fft_sample = fft(self.signal_sample, interpolation)
-
-        # Calculate amplitude and phase for both signals
-        self.A_signal_ref = np.abs(fft_ref)
-        self.ph_signal_ref = np.unwrap(np.angle(fft_ref))
-
-        self.A_signal_sample = np.abs(fft_sample)
-        self.ph_signal_sample = np.unwrap(np.angle(fft_sample))
 
         # Adjust frequency array for all possible values from fft
         self.f_interp = np.linspace(self.f[0], self.f[-1], interpolation)
+
+        #Transform data using numpy fft
+        self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample = fft_signals(
+            self.signal_ref, 
+            self.signal_sample, 
+            interpolation
+            )
+        
 
 
 
@@ -104,6 +106,7 @@ class Extractor:
         return fft_data
 
 
+
     def plot_frequency_domain(self):
         '''
         Plots Frequency domain
@@ -115,7 +118,16 @@ class Extractor:
     # fitting method for the refractive index
     def calculate_refractive_index(self, n_0: complex):
 
-        """Calculate refractive index using the Newton-Raphson method."""
+        """Calculate refractive index using the Newton-Raphson method.
+            Inputs:
+            -------
+            n_0: Initial guess for complex refractive index.
+            self: Allows the method to access atributes of the class such as amplitude and phase of signals in frequency domain.
+
+            Outputs:
+            --------
+            None: Results are appended to n_extracted attribute of the class.
+        """
         
         # define experimental transfer function
         H_exp_general = (self.A_signal_sample * np.exp(1j * self.ph_signal_sample)) / (self.A_signal_ref * np.exp(1j * self.ph_signal_ref))
