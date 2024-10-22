@@ -1,14 +1,15 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from numpy.fft import fft
-from transfer_functions import *
+from .transfer_functions import *
+from .plotting import *
+from .transformations import *
+from .constants import c
 
-c = 299792458  # Speed of light in m/s
+
 
 # Create extractor class
 class Extractor:
-    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float):
+    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float) -> None:
 
         ### Preprocess time domain data and extract frequency range when the class is first called
 
@@ -46,78 +47,88 @@ class Extractor:
     # Plots and returns time domain data
 
     def plot_time_domain(self):
-        # Plot the signals
-        plt.figure(figsize=(8,4), dpi=150)
-        plt.plot(self.time_ref, self.signal_ref, label="Reference Signal")
-        plt.plot(self.time_sample, self.signal_sample, label="Sample Signal")
-        plt.title('Signals in time domain')
-        plt.xlabel('Time [ps]')
-        plt.ylabel('Signal [nA]')
-        plt.legend()
-        plt.show()
+        '''
+        Plots the time domain data
+        '''
+        plot_time_domain(self.time_ref, self.signal_ref, self.time_sample, self.signal_sample)
 
 
 
     def get_processed_data(self):
-        # Return arrays with data needed for later steps
-        return self.signal_ref, self.time_ref, self.signal_sample, self.time_sample, self.f
+        '''
+        returns the time domain processed data as a pandas data frame.
+        '''
+        data = {
+            'frequency': self.f,
+            'signal_ref': self.signal_ref,
+            'time_ref': self.time_ref,
+            'signal_sample': self.signal_sample,
+            'time_sample': self.time_sample
+        }
+        processed_data = pd.DataFrame(data)
+        return processed_data
+
+
 
     ###--------------------------------------------------------------------------------------------------------
     # Handles frequency domain data 
 
-    def fft_signals(self, interpolation: int = 2**12):
+    def fft_signals(self, interpolation: int = 2**12) -> None:
+        '''
+        Transforms data using numpy fft.
+        '''
+        # Make interpolation an attribute of the class
         self.interpolation = interpolation
-        # Compute FFTs of both signals with interpolation
-        fft_ref = fft(self.signal_ref, interpolation)
-        fft_sample = fft(self.signal_sample, interpolation)
-
-        # Calculate amplitude and phase for both signals
-        self.A_signal_ref = np.abs(fft_ref)
-        self.ph_signal_ref = np.unwrap(np.angle(fft_ref))
-
-        self.A_signal_sample = np.abs(fft_sample)
-        self.ph_signal_sample = np.unwrap(np.angle(fft_sample))
 
         # Adjust frequency array for all possible values from fft
         self.f_interp = np.linspace(self.f[0], self.f[-1], interpolation)
 
+        #Transform data using numpy fft
+        self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample = fft_signals(
+            self.signal_ref, 
+            self.signal_sample, 
+            interpolation
+            )
+
 
 
     def get_fft_data(self):
-        # Return amplitude, phase, and frequency data
-        return self.f_interp, self.A_signal_ref, self.A_signal_sample, self.ph_signal_ref, self.ph_signal_sample
+    # Create a DataFrame for amplitude, phase, and frequency data
+        data = {
+        'interpolated frequency': self.f_interp,
+        'amplitude_signal_ref': self.A_signal_ref,
+        'amplitude_signal_sample': self.A_signal_sample,
+        'phase_signal_ref': self.ph_signal_ref,
+        'phase_signal_sample': self.ph_signal_sample
+        }
+    
+        fft_data = pd.DataFrame(data)
+        return fft_data
 
 
 
     def plot_frequency_domain(self):
-        # Create a tiled layout for plotting amplitude and phase
-        fig, axs = plt.subplots(2, 1, figsize=(8, 6))
+        '''
+        Plots Frequency domain
+        '''
+        plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample)
 
-        # Plot amplitude spectrum
-        axs[0].plot(self.f_interp, self.A_signal_ref, label='Reference Amplitude')
-        axs[0].plot(self.f_interp, self.A_signal_sample, label='Sample Amplitude')
-        axs[0].set_xlim([0, 4])
-        axs[0].set_title('Fourier transform of Signals')
-        axs[0].set_ylabel('Amplitude')
-        axs[0].legend()
 
-        # Plot phase spectrum
-        axs[1].plot(self.f_interp, self.ph_signal_ref, label='Reference Phase')
-        axs[1].plot(self.f_interp, self.ph_signal_sample, label='Sample Phase')
-        axs[1].set_xlim([0, 4])
-        axs[1].set_xlabel('Frequency [THz]')
-        axs[1].set_ylabel('Phase [Radians]')
-        axs[1].legend()
-
-        # Display the plots
-        plt.tight_layout()
-        plt.show()
 
     ###--------------------------------------------------------------------------------------------------------
     # fitting method for the refractive index
     def calculate_refractive_index(self, n_0: complex):
 
-        """Calculate refractive index using the Newton-Raphson method."""
+        """Calculate refractive index using the Newton-Raphson method.
+            Inputs:
+            -------
+            n_0: Initial guess for complex refractive index.
+            self: Allows the method to access atributes of the class such as amplitude and phase of signals in frequency domain.
+
+            Outputs:
+            --------
+            None: Results are appended to n_extracted attribute of the class.
+        """
         
         # define experimental transfer function
         H_exp_general = (self.A_signal_sample * np.exp(1j * self.ph_signal_sample)) / (self.A_signal_ref * np.exp(1j * self.ph_signal_ref))
@@ -135,13 +146,13 @@ class Extractor:
         for f_index in range(self.interpolation):
             n_next = n_0  # Reset for each frequency
             for _ in range(10):  # Arbitrary number of iterations for Newton-Raphson
-                H_th = H_th_function(n_next, w)
+                H_th = H_th_function(n_next, w, self.Length)
                 A_th = np.abs(H_th)
                 ph_th = np.unwrap(np.angle(H_th))
 
                 # Function to optimize
                 fun = np.log(A_th[f_index]) - np.log(self.A_exp[f_index]) + 1j * ph_th[f_index] - 1j * self.ph_exp[f_index]
-                fun_prime = H_prime_function(n_next, w[f_index])
+                fun_prime = H_prime_function(n_next, w[f_index], self.Length)
 
                 # Update refractive index using Newton-Raphson
                 n_next = n_next - fun / fun_prime
@@ -149,32 +160,33 @@ class Extractor:
             # Store extracted refractive index
             self.n_extracted[f_index] = n_next
 
+
+
+    # Return refractive index data as dataframe
+
     def get_refractive_index_data(self):
-        """Return the real and imaginary parts of the extracted refractive index."""
-        return np.real(self.n_extracted), np.imag(self.n_extracted)
+        '''
+        Return refractive index as dataframe.
+        '''
+        # Organise data as dict
+        data = {
+        'real_part': np.real(self.n_extracted),
+        'imaginary_part': np.imag(self.n_extracted)
+        }
+    
+        # Convert dict to df
+        refractive_index_data = pd.DataFrame(data)
+
+        return refractive_index_data
+
+
 
     def plot_refractive_index(self):
-        """Plot the real and imaginary parts of the refractive index."""
-        fig, axs = plt.subplots(2, 1, figsize=(12, 6))
-
-        # Plot real part of refractive index
-        axs[0].plot(self.f_interp, np.real(self.n_extracted))
-        axs[0].set_xlim([0, 4])
-        #axs[0].set_ylim([3.45, 3.47])
-        axs[0].set_xlabel("Frequency (THz)")
-        axs[0].set_ylabel("Real refractive index n")
-
-        # Plot imaginary part of refractive index (extinction coefficient)
-        axs[1].plot(self.f_interp, np.imag(self.n_extracted))
-        axs[1].set_xlim([0, 4])
-        #axs[1].set_ylim([-0.5, 0.5])
-        axs[1].set_xlabel("Frequency (THz)")
-        axs[1].set_ylabel("Extinction coefficient k")
-
-        plt.tight_layout()
-        plt.show()
-
-
+        '''
+        Plot the real and imaginary parts of the refractive index.
+        '''
+        # call externally defined plotting fucntion
+        plot_refractive_index(self.f_interp, self.n_extracted)
 
 
 
@@ -183,8 +195,8 @@ class Extractor:
 ###--------------------------------------------------------------------------------------------------------
 # Test the functionality
 if __name__ == "__main__":
-    ref_tab = pd.read_csv("data/ref.pulse.csv").to_numpy()
-    sample_tab = pd.read_csv("data/Si.pulse.csv").to_numpy()
+    ref_tab = pd.read_csv("Data_sets/simple_data/ref.pulse.csv").to_numpy()
+    sample_tab = pd.read_csv("Data_sets/simple_data/Si.pulse.csv").to_numpy()
 
     extractor = Extractor(ref_tab, sample_tab, thickness=3*1e-3)
 

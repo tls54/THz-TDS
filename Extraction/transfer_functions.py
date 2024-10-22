@@ -1,5 +1,5 @@
 import numpy as np
-from Extraction import c
+from .constants import c
 
 ## Define transfer function for no reflection model
 
@@ -21,6 +21,8 @@ def H_th_function(n, w, length):
 
     '''
     return (4 * n) / ((n + 1) ** 2) * np.exp(-1j * (n - 1) * w * length/ c)
+
+
 
 def H_prime_function(n, w, length):
     '''
