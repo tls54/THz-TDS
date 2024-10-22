@@ -3,12 +3,21 @@
 This project aims to provide a toolkit for material parameter extraction using THz-TDS.
 The current implementation uses a basic Newton-Raphson method on an experimental transfer function for a no refections theoretical transfer function.
 
+
+
 ## Features
 ### Extraction
 - Preprocessing of time-domain data
 - FFT-based signal extraction
 - Refractive index calculations
 - Plotting functionalities
+### Data_sets
+- simple_data: Contains a reference and clean time domain data for silicon at 300 micron thickness
+- complex data: Contains a reference pulse (ref2.csv) and 4 samples, two GaAs and two LiNbO. The thickness is the second number in the file name and is given in microns.
+### Notebooks
+- testing.ipynb: Basic demonstration of class implementation for a simple dataset.
+- Extractions (folder): contains notebooks with material parameter extractions for all samples. These also contain prototype code for the windowing functionality needed for these samples due to reflections.
+
 
 ## Package structure
 ### Extraction (Package)
@@ -32,6 +41,7 @@ Contains:
 
 ## Data requirements
 Data being input to the Extractor class/ methods should follow the schematic and structure of the example data sets in the 'Data_sets' folder.
+
 
 
 ## Usage
