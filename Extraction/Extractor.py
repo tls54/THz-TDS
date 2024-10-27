@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.signal.windows import tukey
 from .transfer_functions import *
 from .plotting import *
 from .transformations import *
@@ -9,7 +10,7 @@ from .constants import c
 
 # Create extractor class
 class Extractor:
-    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float) -> None:
+    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float, dc_offset_range: int = 50) -> None:
 
         ### Preprocess time domain data and extract frequency range when the class is first called
 
@@ -41,7 +42,8 @@ class Extractor:
         t = np.arange(0, L) * T
         self.f = Fs / L * np.arange(0, L)  # Frequency values
 
-
+        self.signal_ref -= np.mean(self.signal_ref[:dc_offset_range])
+        self.signal_sample -= np.mean(self.signal_sample[:dc_offset_range])
 
     ###--------------------------------------------------------------------------------------------------------
     # Plots and returns time domain data
@@ -69,11 +71,36 @@ class Extractor:
         return processed_data
 
 
+    ###--------------------------------------------------------------------------------------------------------
+    # Performs windowing on raw pulses
+    def window(self, window_width_ref = 150, window_width_sample = 150):
+        window_centre_index_ref = np.argmax(np.abs(self.signal_ref))
+        window_centre_index_sample = np.argmax(np.abs(self.signal_sample))
+
+        window_ref = tukey(2*window_width_ref, 0.4)
+        window_sample = tukey(2*window_width_sample, 0.4)
+
+        length = self.signal_ref.size
+        full_window_ref = np.zeros(length)
+        full_window_sample = np.zeros(length)
+
+        full_window_ref[window_centre_index_ref-window_width_ref:
+                        window_centre_index_ref+window_width_ref] = window_ref
+        
+        full_window_sample[window_centre_index_sample-window_width_sample:
+                            window_centre_index_sample+window_width_sample] = window_sample
+
+        self.signal_ref *= full_window_ref
+        self.signal_sample *= full_window_sample
+
+        return full_window_ref, full_window_sample
+
+
 
     ###--------------------------------------------------------------------------------------------------------
     # Handles frequency domain data 
 
-    def fft_signals(self, interpolation: int = 2**12) -> None:
+    def fft_signals(self, interpolation: int = 2**12, unwrapping_regression_range = [205, 820]) -> None:
         '''
         Transforms data using numpy fft.
         '''
@@ -87,8 +114,21 @@ class Extractor:
         self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample = fft_signals(
             self.signal_ref, 
             self.signal_sample, 
-            interpolation
+            interpolation,
+            self.f_interp,
+            unwrapping_regression_range
             )
+        
+        # calculate the transfer function, separate abs and phase and begin unwrapping
+        H_exp_general = (self.A_signal_sample * np.exp(1j * self.ph_signal_sample)) / (self.A_signal_ref * np.exp(1j * self.ph_signal_ref))
+        self.A_transfer = np.abs(H_exp_general)
+        self.ph_transfer = np.unwrap(np.angle(H_exp_general))
+
+        # remove the offset in transfer unwrapped phase
+        finds = np.arange(*unwrapping_regression_range)
+        coef = np.polyfit(self.f_interp[finds], self.ph_transfer[finds], 1)
+        self.ph_transfer -= coef[1]
+
 
 
 
@@ -99,7 +139,9 @@ class Extractor:
         'amplitude_signal_ref': self.A_signal_ref,
         'amplitude_signal_sample': self.A_signal_sample,
         'phase_signal_ref': self.ph_signal_ref,
-        'phase_signal_sample': self.ph_signal_sample
+        'phase_signal_sample': self.ph_signal_sample,
+        'amplitude_transfer': self.A_transfer,
+        'phase_transfer': self.ph_transfer
         }
     
         fft_data = pd.DataFrame(data)
@@ -131,12 +173,12 @@ class Extractor:
         """
         
         # define experimental transfer function
-        H_exp_general = (self.A_signal_sample * np.exp(1j * self.ph_signal_sample)) / (self.A_signal_ref * np.exp(1j * self.ph_signal_ref))
+        #H_exp_general = (self.A_signal_sample * np.exp(1j * self.ph_signal_sample)) / (self.A_signal_ref * np.exp(1j * self.ph_signal_ref))
         
         #define components of experimental transfer function
-        self.A_exp = np.abs(H_exp_general)
-        self.ph_exp = np.unwrap(np.angle(H_exp_general))
-
+        self.A_exp = self.A_transfer
+        self.ph_exp = self.ph_transfer
+        
         # Initialize extracted array to be complex and the correct size
         self.n_extracted = np.zeros(self.interpolation, dtype=complex)
         
