@@ -128,6 +128,13 @@ class Extractor:
         finds = np.arange(*unwrapping_regression_range)
         coef = np.polyfit(self.f_interp[finds], self.ph_transfer[finds], 1)
         self.ph_transfer -= coef[1]
+        mse_h = np.mean(np.square(self.ph_transfer[finds]-coef[0]*self.f_interp[finds]))
+
+        print("phase of H slope: ", coef[0])
+        print("mse of H slope: ", mse_h)
+
+        # calculate fast refractive index using n = 1 - phi*c / omega*L
+        self.fast_n = 1 - (self.ph_transfer * c) / (2*np.pi*self.f_interp*1e12 * self.Length)
 
 
 
