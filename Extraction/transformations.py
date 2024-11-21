@@ -27,7 +27,7 @@ def fft_signals(signal_ref, signal_sample, interpolation: int, f_interp, unwrapp
         return A_signal_ref, ph_signal_ref, A_signal_sample, ph_signal_sample
 
 
-def remove_phase_offset(f_interp, ph_signal, unwrapping_regression_range):
+def remove_phase_offset(f_interp, ph_signal, unwrapping_regression_range, verbose=True):
         '''
         Adjusts the phase offset such that it follows y = mx for a given range.
         '''
@@ -42,10 +42,11 @@ def remove_phase_offset(f_interp, ph_signal, unwrapping_regression_range):
         # Print out statistics as a sanity check
         mse = np.mean(np.square(ph_signal-f_interp*coef[0])[f_indices])
 
-        print("Phase offset fit frequency range: ", f_interp[unwrapping_regression_range])
-        print("Phase slope: ", coef[0])
-        print("Mean squared error: ", mse)
-        print("(Should be ~< 1.)")
-        print("--------------------")
+        if verbose:
+                print("Phase offset fit frequency range: ", f_interp[unwrapping_regression_range])
+                print("Phase slope: ", coef[0])
+                print("Mean squared error: ", mse)
+                print("(Should be ~< 1.)")
+                print("--------------------")
 
         return ph_signal 

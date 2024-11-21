@@ -141,7 +141,7 @@ class Extractor:
 
         # Remove the offset in transfer unwrapped phase like 
         print("Transfer function:")
-        self.ph_transfer = remove_phase_offset(self.f_interp, self.ph_transfer, unwrapping_regression_range)
+        self.ph_transfer = remove_phase_offset(self.f_interp, self.ph_transfer, self.unwrapping_regression_range)
 
         # Calculate fast refractive index using n = 1 - phi*c / omega*L; 1e-16 prevents div. by zero
         self.fast_n = 1 - (self.ph_transfer * c) / (2*np.pi*self.f_interp*1e12 * self.Length + 1e-16)
@@ -211,10 +211,10 @@ class Extractor:
         for f_index in range(len(frequency)):
             n_next = n_0  # Reset for each frequency
             for _ in range(10):  # Arbitrary number of iterations for Newton-Raphson
-                H_th = H_th_function(n_next, w, self.Length)
+                H_th = H_th_function(n_next, self.f_interp*1e12*2*np.pi, self.Length)
                 A_th = np.abs(H_th)
                 ph_th = np.unwrap(np.angle(H_th))
-                ph_th = remove_phase_offset(frequency, ph_th, self.unwrapping_regression_range)
+                ph_th = remove_phase_offset(self.f_interp, ph_th, self.unwrapping_regression_range, verbose=False)
 
                 # Function to optimize
                 fun = np.log(A_th[f_index]) - np.log(self.A_exp[f_index]) + 1j*(ph_th[f_index] - self.ph_exp[f_index])
