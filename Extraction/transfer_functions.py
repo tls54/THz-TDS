@@ -41,4 +41,4 @@ def H_prime_function(n, w, length):
     Equation for derivative of transfer function formulated by hand 
     
     '''
-    return (1 / n) - (2 / (n + 1)) - 1j * w * length / c
+    return ((1 / n) - (2 / (n + 1)) - 1j * w * length / c)
