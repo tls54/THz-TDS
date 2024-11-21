@@ -4,6 +4,9 @@ from numpy.fft import fft
 
 
 def fft_signals(signal_ref, signal_sample, interpolation: int, f_interp, unwrapping_regression_range):
+        '''
+        Performs FFT on time domain signals and unwraps the phase with the correct offset.
+        '''
         # Compute FFTs of both signals with interpolation
         fft_ref = fft(signal_ref, interpolation)
         fft_sample = fft(signal_sample, interpolation)
@@ -15,22 +18,34 @@ def fft_signals(signal_ref, signal_sample, interpolation: int, f_interp, unwrapp
         A_signal_sample = np.abs(fft_sample)
         ph_signal_sample = np.unwrap(np.angle(fft_sample))
 
-        # fit a linear model to the phase in a given range      
-        finds = np.arange(*unwrapping_regression_range)
-        coef_r = np.polyfit(f_interp[finds], ph_signal_ref[finds], 1)
-        coef_s = np.polyfit(f_interp[finds], ph_signal_sample[finds], 1)
-
-        # remove the offset
-        ph_signal_ref -= coef_r[1] 
-        ph_signal_sample -= coef_s[1] 
-
-        # mean squared difference between the fit and data (sanity check)
-        mse_r = np.mean(np.square(ph_signal_ref-f_interp*coef_r[0])[finds])
-        mse_s = np.mean(np.square(ph_signal_sample-f_interp*coef_s[0])[finds])
-
-        print("phase offset fit frequency range: ", f_interp[unwrapping_regression_range])
-        print("slopes for reference  and sample: ", coef_r[0], coef_s[0])
-        print("mean squared error for ref and sample: ", mse_r, mse_s)
-        print("(should be ~< 1)")
-
+        # Remove phase offset
+        print("Reference:")
+        ph_signal_ref = remove_phase_offset(f_interp, ph_signal_ref, unwrapping_regression_range)
+        print("Sample:")
+        ph_signal_sample = remove_phase_offset(f_interp, ph_signal_sample, unwrapping_regression_range) 
+        
         return A_signal_ref, ph_signal_ref, A_signal_sample, ph_signal_sample
+
+
+def remove_phase_offset(f_interp, ph_signal, unwrapping_regression_range):
+        '''
+        Adjusts the phase offset such that it follows y = mx for a given range.
+        '''
+        # Fit a linear model y=mx+b to the phase curve in a given range
+        f_indices = np.arange(*unwrapping_regression_range)
+        coef = np.polyfit(f_interp[f_indices], ph_signal[f_indices], 1)
+
+
+        # Remove the offset b
+        ph_signal -= coef[1]
+
+        # Print out statistics as a sanity check
+        mse = np.mean(np.square(ph_signal-f_interp*coef[0])[f_indices])
+
+        print("Phase offset fit frequency range: ", f_interp[unwrapping_regression_range])
+        print("Phase slope: ", coef[0])
+        print("Mean squared error: ", mse)
+        print("(Should be ~< 1.)")
+        print("--------------------")
+
+        return ph_signal 
