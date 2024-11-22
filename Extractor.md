@@ -24,7 +24,7 @@ The `Extractor` class initializes with reference and sample signals, material th
 - **`signal_ref`**: Reference signal in the time domain.
 - **`signal_sample`**: Sample signal in the time domain.
 - **`thickness`**: Thickness of the material (in meters).
-- **`unwrapping_regression_range`**: Optional frequency range for phase unwrapping, default is `[205, 820]`.
+- **`dc_offset_range`**: Calculates the DC offset or the time domain signals default is set to use the first 50 values.
 
 ---
 
