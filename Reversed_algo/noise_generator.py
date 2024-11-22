@@ -46,10 +46,12 @@ def noise_generator(signal: np.array, noise_bounds: list, noise_profile: str = "
     if not isinstance(noise_profile, str):
         raise TypeError(f"Expected str but got {type(noise_profile)}.")
 
+    # extract min and max noise to check validity
     min_noise, max_noise = noise_bounds
-    if min_noise > max_noise:
-        raise ValueError("Minimum noise bound cannot be greater than maximum noise bound.")
-
+    # handles comparison of complex noise parameters 
+    if min_noise.real > max_noise.real or min_noise.imag > max_noise.imag:
+        raise ValueError(f"Minimum noise bound ({min_noise}) cannot have larger real or imaginary parts than maximum noise bound ({max_noise}).")
+    
     # define random seed of random number gen
     seed = int(time.time() * 1000)  # ms precision
     rng = np.random.default_rng(seed)
@@ -69,7 +71,7 @@ def noise_generator(signal: np.array, noise_bounds: list, noise_profile: str = "
     else:   # if the profile is not valid we raise an error
         raise ValueError(f"Invalid noise_profile '{noise_profile}'. Must be one of ['uniform', 'gaussian', 'normal'].")
 
-    # apply noise to origional signal
+    # apply noise to original signal
     noisy_signal = signal + noise_adjustments
 
     return noisy_signal
