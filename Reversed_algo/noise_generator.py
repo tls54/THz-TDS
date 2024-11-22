@@ -58,20 +58,38 @@ def noise_generator(signal: np.array, noise_bounds: list, noise_profile: str = "
 
     data_points = len(signal)
 
+    if noise_profile == "uniform":  # noise distribution is uniform
+        if isinstance(min_noise, complex) or isinstance(max_noise, complex):
+            # Handle complex noise: Generate uniform noise separately for real and imaginary parts
+            real_part = rng.uniform(low=min_noise.real, high=max_noise.real, size=data_points)
+            imag_part = rng.uniform(low=min_noise.imag, high=max_noise.imag, size=data_points)
+            noise_adjustments = real_part + 1j * imag_part
+        else:
+            # Handle real noise
+            noise_adjustments = rng.uniform(low=min_noise, high=max_noise, size=data_points)
 
-    if noise_profile == "uniform":  # noise distribution is normal
-        noise_adjustments = rng.uniform(low=min_noise, high=max_noise, size=data_points)
+    elif noise_profile in {"gaussian", "normal"}:  # noise follows normal distribution
+        if isinstance(min_noise, complex) or isinstance(max_noise, complex):
+            # Handle complex noise: Generate Gaussian noise separately for real and imaginary parts
+            mean_real = (min_noise.real + max_noise.real) / 2  # Midpoint of real parts
+            std_dev_real = (max_noise.real - min_noise.real) / 2  # Half the range of real parts
+            real_part = rng.normal(loc=mean_real, scale=std_dev_real, size=data_points)
+            
+            mean_imag = (min_noise.imag + max_noise.imag) / 2  # Midpoint of imaginary parts
+            std_dev_imag = (max_noise.imag - min_noise.imag) / 2  # Half the range of imaginary parts
+            imag_part = rng.normal(loc=mean_imag, scale=std_dev_imag, size=data_points)
+            
+            noise_adjustments = real_part + 1j * imag_part
+        else:
+            # Handle real noise
+            mean = (min_noise + max_noise) / 2  # Midpoint of the bounds
+            std_dev = (max_noise - min_noise) / 2  # Half the range of the bounds
+            noise_adjustments = rng.normal(loc=mean, scale=std_dev, size=data_points)
 
-
-    elif noise_profile == "gaussian" or noise_profile == "normal":  # noise follows normal distribution
-        mean = (noise_bounds[0] + noise_bounds[1]) / 2  # Midpoint of the bounds
-        std_dev = (noise_bounds[1] - noise_bounds[0]) / 2  # Half the range of the bounds
-        noise_adjustments = rng.normal(loc=mean, scale=std_dev, size=data_points)
-
-    else:   # if the profile is not valid we raise an error
+    else:  # If the profile is not valid, raise an error
         raise ValueError(f"Invalid noise_profile '{noise_profile}'. Must be one of ['uniform', 'gaussian', 'normal'].")
 
-    # apply noise to original signal
+    # Apply noise to the original signal
     noisy_signal = signal + noise_adjustments
 
     return noisy_signal
