@@ -13,7 +13,7 @@ def H_th_function(n, w, length):
     
     outputs
     -------
-    returns: output for the tranfer function
+    returns: output for the transfer function
 
     Method
     ------
