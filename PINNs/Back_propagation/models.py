@@ -4,11 +4,14 @@ from back_prop_utils import H_th_function
 from plotting_utils import plot_training_progress
 
 class TransferFunctionModel(torch.nn.Module):
-    def __init__(self, w_tensor, d):
+    def __init__(self, w_tensor, d, ICs:list):
+        """
+        
+        """
         super().__init__()
         self.w_tensor = w_tensor  
-        self.n = torch.nn.Parameter(torch.tensor(3.0, dtype=torch.float32))  
-        self.k = torch.nn.Parameter(torch.tensor(-0.05, dtype=torch.float32))  
+        self.n = torch.nn.Parameter(torch.tensor(ICs[0], dtype=torch.float32))  
+        self.k = torch.nn.Parameter(torch.tensor(ICs[1], dtype=torch.float32))  
         self.d = d  # Fixed thickness
 
         # Store best parameters found during training
@@ -40,8 +43,8 @@ class TransferFunctionModel(torch.nn.Module):
 
         if optimizer is None:
             optimizer = torch.optim.Adam(self.parameters(), lr=lr)
-
-        self.loss_plot = []
+            
+        self.loss_history = []
         self.n_vals = []
         self.k_vals = []
 
@@ -59,7 +62,7 @@ class TransferFunctionModel(torch.nn.Module):
             H_pred_phase_unwrapped = torch.tensor(H_pred_phase_unwrapped, dtype=torch.float32).to(H_pred.device)
 
             loss_value = loss_fn(H_values, H_pred_amp, phi_values, H_pred_phase_unwrapped)
-            self.loss_plot.append(loss_value.item())
+            self.loss_history.append(loss_value.item())
 
             # Update best parameters if this is the lowest loss seen
             if loss_value.item() < self.best_params['loss']:
@@ -77,8 +80,8 @@ class TransferFunctionModel(torch.nn.Module):
             print(f"Final n: {self.n.item()}, Final k: {self.k.item()}")
             print(f"Best n: {self.best_params['n']}, Best k: {self.best_params['k']} (Lowest Loss: {self.best_params['loss']})")
 
-        return self.loss_plot, self.n_vals, self.k_vals, self.best_params
+        return self.loss_history, self.n_vals, self.k_vals, self.best_params
 
     # Define easy plotting method to quickly call plots
     def plot_training_curves(self, n_actual, k_actual, thickness):
-        plot_training_progress(self.loss_plot, self.n_vals, self.k_vals, n_actual, k_actual, thickness)
+        plot_training_progress(self.loss_history, self.n_vals, self.k_vals, n_actual, k_actual, thickness)
