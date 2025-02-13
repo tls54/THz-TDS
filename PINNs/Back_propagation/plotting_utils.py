@@ -80,3 +80,49 @@ def plot_training_progress(loss_plot, n_vals, k_vals, n_actual, k_actual, thickn
     # Improve layout
     plt.tight_layout()
     plt.show()
+
+
+
+
+## Define standard method for plotting transfer function data
+def plot_transfer(frequencies, absolute_values, phase_values, absolute_values_clean=None, phase_values_clean=None, params=None):
+    """
+    Plots the absolute value and unwrapped phase of a transfer function.
+    
+    Args:
+        frequencies (array-like): Frequency values in THz.
+        absolute_values (array-like): Noisy absolute values of the transfer function.
+        phase_values (array-like): Noisy phase values of the transfer function (in radians).
+        absolute_values_clean (array-like, optional): Clean absolute values for comparison.
+        phase_values_clean (array-like, optional): Clean phase values for comparison.
+        params (list or None, optional): List containing [n, k, thickness] if available.
+    """
+    
+    fig, axs = plt.subplots(1, 2, figsize=(20, 5))
+
+    # Plot phase values
+    axs[0].scatter(frequencies, phase_values, s=8, label='Noisy phase values')
+    if phase_values_clean is not None:
+        axs[0].scatter(frequencies, phase_values_clean, s=8, label='Clean phase values')
+    axs[0].set_title('Unwrapped phase of sample values')
+    axs[0].set_xlabel('Frequencies [THz]')
+    axs[0].set_ylabel('Angle [Rad]')
+    axs[0].legend()
+
+    # Plot absolute values
+    axs[1].scatter(frequencies, absolute_values, s=8, label='Noisy absolute values')
+    if absolute_values_clean is not None:
+        axs[1].scatter(frequencies, absolute_values_clean, s=8, label='Clean absolute values')
+    axs[1].set_title('Absolute value of transfer function')
+    axs[1].set_xlabel('Frequencies [THz]')
+    axs[1].set_ylabel('|H|')
+    axs[1].legend()
+
+    # Annotate with n, k, d values if provided
+    if params is not None and len(params) == 3:
+        n, k, d = params
+        fig.text(0.05, 0.99, f'n={n:.3f}, k={k:.3f}, d={1e6*d:.1f}µm', 
+                 verticalalignment='top', horizontalalignment='left', 
+                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.5'))
+
+    plt.show()

@@ -10,7 +10,7 @@ from .constants import c
 
 # Create extractor class
 class Extractor:
-    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float, dc_offset_range: int = 50) -> None:
+    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float, dc_offset_range: int = 50, window=False) -> None:
 
         ### Preprocess time domain data and extract frequency range when the class is first called
 
@@ -48,8 +48,9 @@ class Extractor:
         self.signal_ref -= np.mean(self.signal_ref[:dc_offset_range])
         self.signal_sample -= np.mean(self.signal_sample[:dc_offset_range])
 
-        # Perform the automated windowing
-        self.window_tukey_trivial()
+        if window:
+            # Perform the automated windowing
+            self.window_tukey_trivial()
 
         # Perform the Fourier transforms on reference and sample data
         self.fft_signals()
