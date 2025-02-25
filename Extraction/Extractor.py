@@ -167,11 +167,11 @@ class Extractor:
 
 
 
-    def plot_frequency_domain(self):
+    def plot_frequency_domain(self, x_lims=[0,4]):
         '''
         Plots Frequency domain
         '''
-        plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample)
+        plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample, x_lims=x_lims)
 
 
 
