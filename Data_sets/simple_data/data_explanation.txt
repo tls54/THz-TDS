@@ -2,7 +2,7 @@
 ### Data Overview ###
 #####################
 
-complex_data contains scans taken in 1 sample (silicon). 
+simple_data contains scans taken in 1 sample (silicon). 
 The thickness is ~300 microns.
 The reference pulse for all these samples is given in the file ref2.pulse
 

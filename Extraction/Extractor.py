@@ -10,7 +10,7 @@ from .constants import c
 
 # Create extractor class
 class Extractor:
-    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float, dc_offset_range: int = 50) -> None:
+    def __init__(self, reference: np.ndarray, sample: np.ndarray, thickness: float, dc_offset_range: int = 50, window=False) -> None:
 
         ### Preprocess time domain data and extract frequency range when the class is first called
 
@@ -48,8 +48,9 @@ class Extractor:
         self.signal_ref -= np.mean(self.signal_ref[:dc_offset_range])
         self.signal_sample -= np.mean(self.signal_sample[:dc_offset_range])
 
-        # Perform the automated windowing
-        self.window_tukey_trivial()
+        if window:
+            # Perform the automated windowing
+            self.window_tukey_trivial()
 
         # Perform the Fourier transforms on reference and sample data
         self.fft_signals()
@@ -158,7 +159,8 @@ class Extractor:
         'phase_signal_ref': self.ph_signal_ref,
         'phase_signal_sample': self.ph_signal_sample,
         'amplitude_transfer': self.A_transfer,
-        'phase_transfer': self.ph_transfer
+        'phase_transfer': self.ph_transfer,
+        'fast_n':self.fast_n
         }
     
         fft_data = pd.DataFrame(data)
@@ -166,11 +168,11 @@ class Extractor:
 
 
 
-    def plot_frequency_domain(self):
+    def plot_frequency_domain(self, x_lims=[0,4]):
         '''
         Plots Frequency domain
         '''
-        plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample)
+        plot_frequency_domain(self.f_interp, self.A_signal_ref, self.ph_signal_ref, self.A_signal_sample, self.ph_signal_sample, x_lims=x_lims)
 
 
 

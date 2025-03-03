@@ -1,6 +1,8 @@
-## Utilities functions for NN fitting
+## Utilities functions for NN code
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import random
 
 def plot_histogram(data, title="Histogram", xlabel="Value", ylabel="Frequency", color="blue"):
     """
@@ -37,7 +39,7 @@ def plot_histogram(data, title="Histogram", xlabel="Value", ylabel="Frequency", 
     plt.tight_layout()
     plt.show()
 
-
+### function to add gaussian noise to generic signal
 
 def add_gaussian_noise(signal, mean=0, stddev=1):
     """
