@@ -159,7 +159,8 @@ class Extractor:
         'phase_signal_ref': self.ph_signal_ref,
         'phase_signal_sample': self.ph_signal_sample,
         'amplitude_transfer': self.A_transfer,
-        'phase_transfer': self.ph_transfer
+        'phase_transfer': self.ph_transfer,
+        'fast_n':self.fast_n
         }
     
         fft_data = pd.DataFrame(data)

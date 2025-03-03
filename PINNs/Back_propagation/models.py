@@ -81,6 +81,8 @@ class TransferFunctionModel(torch.nn.Module):
             total_loss.backward()
             optimizer.step()
 
+
+
             # Step the scheduler if provided
             if scheduler is not None:
                 if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):

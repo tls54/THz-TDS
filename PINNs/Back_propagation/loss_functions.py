@@ -67,8 +67,7 @@ def loss(H_exp, H, phase_exp, phase):
     torch.Tensor | float: Total loss as a scalar tensor (if inputs are tensors)
                           or a float (if inputs are NumPy arrays).
     """
-    return abs_tf_loss(H_exp, H) + phase_tf_loss(phase_exp, phase)
-
+    return (abs_tf_loss(H_exp, H)) + (phase_tf_loss(phase_exp, phase))
 
 # TODO: Add a "smarter" weighting system
 # Define a weighted loss function to reduce phase bias 
