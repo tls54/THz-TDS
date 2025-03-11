@@ -4,6 +4,7 @@ from .back_prop_utils import H_th_function
 from .plotting_utils import plot_training_progress
 from .loss_functions import *
 
+
 class TransferFunctionModel(torch.nn.Module):
     def __init__(self, w_tensor, d, ICs: list):
         """
@@ -44,13 +45,13 @@ class TransferFunctionModel(torch.nn.Module):
         
         return H_abs_truncated, H_phase_unwrapped_truncated
 
-    def train_model(self, loss_fn, H_values, phi_values, optimizer=None, scheduler=None, epochs=10000, lr=1e-4, verbose=True):
+    def train_model(self, loss_fn, H_values, phi_values, optimizer=None, scheduler=None, epochs=10000, verbose=True):
         """
         Train the model using back-propagation and track the best parameters.
         Supports an optional learning rate scheduler.
         """
         if optimizer is None:
-            optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+            optimizer = torch.optim.Adam(self.parameters(), lr=1e-4)
         
         # Initialize loss lists for analysis
         self.loss_history = []
@@ -111,4 +112,4 @@ class TransferFunctionModel(torch.nn.Module):
 
     # Define easy plotting method to quickly call plots
     def plot_training_curves(self, n_actual=None, k_actual=None, thickness=None):
-        plot_training_progress(self.loss_history, self.n_vals, self.k_vals, n_actual, k_actual, thickness)
+        plot_training_progress(self.loss_history)

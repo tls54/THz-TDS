@@ -69,21 +69,3 @@ def loss(H_exp, H, phase_exp, phase):
     """
     return (abs_tf_loss(H_exp, H)) + (phase_tf_loss(phase_exp, phase))
 
-# TODO: Add a "smarter" weighting system
-# Define a weighted loss function to reduce phase bias 
-def weighted_loss(H_exp, H, phase_exp, phase):
-    """
-    Computes the total weighted loss as the sum of absolute transfer function loss and 
-    weighted phase loss, supporting both PyTorch tensors and NumPy arrays.
-
-    Parameters:
-    H_exp (torch.Tensor | np.ndarray): Experimental transfer function.
-    H (torch.Tensor | np.ndarray): Predicted transfer function.
-    phase_exp (torch.Tensor | np.ndarray): Experimental phase values.
-    phase (torch.Tensor | np.ndarray): Predicted phase values.
-
-    Returns:
-    torch.Tensor | float: Total weighted loss as a scalar tensor (if inputs are tensors)
-                          or a float (if inputs are NumPy arrays).
-    """
-    return abs_tf_loss(H_exp, H) + (phase_tf_loss(phase_exp, phase) / 10)

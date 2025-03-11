@@ -2,20 +2,16 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def plot_training_progress(loss_plot, n_vals, k_vals, n_actual=None, k_actual=None, thickness=None):
+
+## Plot training history
+def plot_training_progress(loss_plot, n_actual=None, k_actual=None, thickness=None):
     """
-    Plots the training progress in a 2×2 grid, showing:
+    Plots the training progress in a 1×2 grid, showing:
     - Loss over epochs
     - Log loss over epochs
-    - Evolution of parameter n
-    - Evolution of parameter k
 
     Args:
         loss_plot (list): List of loss values per epoch.
-        n_vals (list): List of n values per epoch.
-        k_vals (list): List of k values per epoch.
-        n_actual (float, optional): Actual value of n.
-        k_actual (float, optional): Actual value of k.
         thickness (float, optional): Thickness parameter in meters.
 
     Returns:
@@ -35,44 +31,23 @@ def plot_training_progress(loss_plot, n_vals, k_vals, n_actual=None, k_actual=No
     sns.set_theme(style="darkgrid")
 
     # Create a 2×2 grid of subplots
-    fig, axs = plt.subplots(2, 2, figsize=(14, 8), sharex=True)
+    fig, axs = plt.subplots(1, 2, figsize=(14, 6), sharex=True)
 
     # Plot raw loss
-    sns.lineplot(x=epochs, y=loss_plot, ax=axs[0, 0], label="Loss")
-    axs[0, 0].scatter(min_epoch, loss_plot[min_epoch], color="red", 
+    sns.lineplot(x=epochs, y=loss_plot, ax=axs[0], label="Loss")
+    axs[0].scatter(min_epoch, loss_plot[min_epoch], color="red", 
                       label=f"Min Loss: {min(loss_plot):.2f} @ Epoch {min_epoch}", 
                       edgecolor="black", zorder=3)
-    axs[0, 0].set_ylabel("Loss")
-    axs[0, 0].legend()
+    axs[0].set_ylabel("Loss")
+    axs[0].legend()
 
     # Plot log loss
-    sns.lineplot(x=epochs, y=log_loss, color="tab:orange", ax=axs[0, 1], label="Log Loss")
-    axs[0, 1].set_ylabel("Log Loss")
-    axs[0, 1].legend()
-
-    # Plot n values
-    sns.lineplot(x=epochs, y=n_vals, ax=axs[1, 0], label="n values")
-    axs[1, 0].scatter(min_epoch, n_vals[min_epoch], color="red", 
-                      label=f"Optimal value: {n_vals[min_epoch]:.4f} @ Epoch {min_epoch}", 
-                      edgecolor="black", zorder=3)
-    if n_actual is not None:
-        axs[1, 0].axhline(y=n_actual, color="red", linestyle="--", label="Actual n")  
-    axs[1, 0].set_ylabel("n")
-    axs[1, 0].legend()
-
-    # Plot k values
-    sns.lineplot(x=epochs, y=k_vals, color="tab:orange", ax=axs[1, 1], label="k values")
-    axs[1, 1].scatter(min_epoch, k_vals[min_epoch], color="red", 
-                      label=f"Optimal value: {k_vals[min_epoch]:.4f} @ Epoch {min_epoch}", 
-                      edgecolor="black", zorder=3)
-    if k_actual is not None:
-        axs[1, 1].axhline(y=k_actual, color="red", linestyle="--", label="Actual k")  
-    axs[1, 1].set_xlabel("Epochs")
-    axs[1, 1].set_ylabel("k")
-    axs[1, 1].legend()
+    sns.lineplot(x=epochs, y=log_loss, ax=axs[1], color="tab:orange", label="Log Loss")
+    axs[1].set_ylabel("Log Loss")
+    axs[1].legend()
 
     # Add overall title
-    plt.suptitle("Training Progress: Loss and Parameter Evolution")
+    plt.suptitle("Training Progress: Loss")
 
     # Conditionally add text annotation if all true values are available
     if n_actual is not None and k_actual is not None and thickness is not None:
@@ -83,9 +58,6 @@ def plot_training_progress(loss_plot, n_vals, k_vals, n_actual=None, k_actual=No
     # Improve layout
     plt.tight_layout()
     plt.show()
-
-
-
 
 
 ## Define standard method for plotting transfer function data
@@ -224,3 +196,9 @@ def plot_comparison(frequencies, exp_abs, exp_phase, pred_abs, pred_phase, param
                  bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.5'))
 
     plt.show()
+
+
+## Plot frequency dependence of material parameters
+def plot_material_params(frequencies, n, k):
+    
+    return

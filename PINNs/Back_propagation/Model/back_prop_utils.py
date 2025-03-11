@@ -25,6 +25,8 @@ def H_th_function(n_complex, w, length):
     Equation for transfer function derived from [Input source here]
 
     '''
+
+    
     return (4 * n_complex) / ((n_complex + 1) ** 2) * torch.exp(-1j * (n_complex - 1) * w * length/ c)
 
 
@@ -78,10 +80,15 @@ def grid_search(n0, k0, d0, H_values, phi_values, freqs_ang, H_th_function, loss
 
 
 
-
-## Rounding sig fig function
 # Function to round to significant figures
 def round_to_sig_figs(value, sig_figs):
     if value == 0:
         return 0
     return round(value, sig_figs - int(f"{value:.1e}".split('e')[1]) - 1)
+
+
+# Function to unwrap tensor angles and return as a tensor
+def torch_unwrap(phase:torch.tensor) -> torch.tensor:
+    phi = np.unwrap(phase)
+    phi = torch.tensor(phi, dtype=torch.float32)
+    return phi
