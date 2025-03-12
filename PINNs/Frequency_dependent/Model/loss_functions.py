@@ -69,3 +69,59 @@ def loss(H_exp, H, phase_exp, phase):
     """
     return (abs_tf_loss(H_exp, H)) + (phase_tf_loss(phase_exp, phase))
 
+
+
+## Define direct loss comparisons
+import torch
+
+import torch
+
+def complex_transfer_loss(H_exp, H_theory, alpha=1.0, beta=1.0):
+    """
+    Loss function directly comparing complex transfer functions without phase unwrapping.
+
+    Args:
+        H_exp (torch.Tensor): Experimental transfer function (complex).
+        H_theory (torch.Tensor): Theoretical transfer function (complex).
+        alpha (float): Weight for magnitude loss.
+        beta (float): Weight for phase difference loss.
+
+    Returns:
+        torch.Tensor: Computed loss value.
+    """
+    # Magnitude loss (Mean Squared Error on amplitude)
+    mag_loss = torch.nn.functional.mse_loss(torch.abs(H_exp), torch.abs(H_theory))
+
+    # Phase loss (difference of angles)
+    phase_exp = torch.angle(H_exp)
+    phase_theory = torch.angle(H_theory)
+
+    # Direct phase difference, avoiding unwrapping
+    phase_diff = torch.sin(phase_theory - phase_exp)  # Keeps values between -1 and 1
+    phase_loss = torch.mean(phase_diff**2)  # MSE loss on phase difference
+
+    # Weighted sum of losses
+    return alpha * mag_loss + beta * phase_loss
+
+
+
+# Causes etalons in n & k, 
+def complex_real_imag_loss(H_exp, H_pred):
+    """
+    Computes loss using real and imaginary parts separately.
+    """
+
+    real_loss = torch.nn.functional.mse_loss(H_pred.real, H_exp.real)
+    imag_loss = torch.nn.functional.mse_loss(H_pred.imag, H_exp.imag)
+
+    return real_loss + imag_loss
+
+
+
+def log_complex_loss(H_exp, H_pred):
+    """Computes loss in the log domain to avoid phase wrapping issues."""
+    log_H_exp = torch.log(H_exp)  # Compute log of experimental transfer function
+    log_H_pred = torch.log(H_pred)  # Compute log of predicted transfer function
+
+    # Compute MSE loss in the log space
+    return torch.nn.functional.mse_loss(log_H_pred.real, log_H_exp.real) + torch.nn.functional.mse_loss(log_H_pred.imag, log_H_exp.imag)

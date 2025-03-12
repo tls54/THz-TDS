@@ -12,7 +12,7 @@ def H_th_function(n_complex, w, length):
     '''
     Inputs
     ------
-    n: refractive index
+    n: complex refractive index
     w: frequency of light being propagated
     length: length of the sample we are modelling
     

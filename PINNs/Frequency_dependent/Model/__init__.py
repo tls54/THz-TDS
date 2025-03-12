@@ -1,2 +1,2 @@
-from .model_old import TransferFunctionModel
-from .models import AverageTransferFunctionModel, FrequencyDependentModel
+from .models_avg import AverageTransferFunctionModel
+from .model_freq_dep import FrequencyDependentModel

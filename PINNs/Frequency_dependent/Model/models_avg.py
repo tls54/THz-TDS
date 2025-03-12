@@ -114,24 +114,3 @@ class AverageTransferFunctionModel(BaseModel):
         
         return H_abs_truncated, H_phase_unwrapped_truncated
 
-## Frequency dependent model
-# TODO: add doc string
-class FrequencyDependentModel(BaseModel):
-    def __init__(self, w_tensor, d, ICs_n, ICs_k):
-        super().__init__(w_tensor, d, ICs_n, ICs_k)
-        self.n = torch.nn.Parameter(torch.tensor(ICs_n, dtype=torch.float32).repeat(len(self.full_w_tensor)))
-        self.k = torch.nn.Parameter(torch.tensor(ICs_k, dtype=torch.float32).repeat(len(self.full_w_tensor)))
-    
-    def forward(self):
-        n_complex = self.n + 1j * self.k
-        H_full = H_th_function(n_complex=n_complex, w=self.full_w_tensor, length=self.d)
-        
-        H_abs = torch.abs(H_full)
-        H_phase = torch.angle(H_full)
-        H_phase_unwrapped = np.unwrap(H_phase.detach().cpu().numpy())
-        H_phase_unwrapped = torch.tensor(H_phase_unwrapped, dtype=torch.float32).to(H_full.device)
-        
-        H_abs_truncated = H_abs[-len(self.w_tensor):]
-        H_phase_unwrapped_truncated = H_phase_unwrapped[-len(self.w_tensor):]
-        
-        return H_abs_truncated, H_phase_unwrapped_truncated

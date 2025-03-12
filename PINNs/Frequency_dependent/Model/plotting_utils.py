@@ -77,16 +77,17 @@ def plot_transfer(frequencies, absolute_values, phase_values, absolute_values_cl
     fig, axs = plt.subplots(1, 2, figsize=(20, 5))
 
     # Plot phase values
-    axs[0].scatter(frequencies, phase_values, s=8, label='Noisy phase values')
+    axs[0].plot(frequencies, phase_values, label='Phase values')
+
     if phase_values_clean is not None:
         axs[0].scatter(frequencies, phase_values_clean, s=8, label='Clean phase values')
-    axs[0].set_title('Unwrapped phase of transfer function')
+    axs[0].set_title('Phase of transfer function')
     axs[0].set_xlabel('Frequencies [THz]')
     axs[0].set_ylabel('Angle [Rad]')
     axs[0].legend()
 
     # Plot absolute values
-    axs[1].scatter(frequencies, absolute_values, s=8, label='Noisy absolute values')
+    axs[1].scatter(frequencies, absolute_values, s=8, label='Absolute values')
     if absolute_values_clean is not None:
         axs[1].scatter(frequencies, absolute_values_clean, s=8, label='Clean absolute values')
     axs[1].set_title('Absolute value of transfer function')
@@ -173,8 +174,8 @@ def plot_comparison(frequencies, exp_abs, exp_phase, pred_abs, pred_phase, param
     fig, axs = plt.subplots(1, 2, figsize=(20, 5))
 
     # Plot phase values
-    axs[0].scatter(frequencies, exp_phase, s=8, label='Experimental phase', alpha=0.7)
-    axs[0].scatter(frequencies, pred_phase, s=8, label='Predicted phase', alpha=0.7)
+    axs[0].plot(frequencies, exp_phase, label='Experimental phase', alpha=0.7)
+    axs[0].plot(frequencies, pred_phase, label='Predicted phase', alpha=0.7)
     axs[0].set_title('Unwrapped phase of transfer function')
     axs[0].set_xlabel('Frequencies [THz]')
     axs[0].set_ylabel('Angle [Rad]')
@@ -199,6 +200,3 @@ def plot_comparison(frequencies, exp_abs, exp_phase, pred_abs, pred_phase, param
 
 
 ## Plot frequency dependence of material parameters
-def plot_material_params(frequencies, n, k):
-    
-    return
