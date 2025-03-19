@@ -1,6 +1,7 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 
 ## Plot training history
@@ -200,3 +201,49 @@ def plot_comparison(frequencies, exp_abs, exp_phase, pred_abs, pred_phase, param
 
 
 ## Plot frequency dependence of material parameters
+def plot_material_params(frequencies, n, k):
+    # Create the first subplot (assuming 'data1' is your first dataset)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    # First plot: Approximate values of n from NR solution
+    sns.scatterplot(x=frequencies, y=n, label="n values", ax=ax1)
+    ax1.set_title('Approximate values of n')
+    ax1.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+    ax1.set_xlabel('Frequencies [THz]')
+
+    # Second plot (assuming 'data2' is your second dataset with x and y values)
+    sns.scatterplot(x=frequencies, y=k, label="k values", ax=ax2)
+    ax2.set_title('Approximate values of k')
+    ax2.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+    ax2.set_xlabel('Frequencies [THz]')
+
+    # Adjust layout and add main title if needed
+    plt.suptitle('Material Parameters', y=1.02)
+    plt.tight_layout()
+    plt.legend()
+    plt.show()
+
+## Define method to compare material parameters
+def compare_material_params(frequencies, n1, k1, n2, k2):
+    # Create the first subplot (assuming 'data1' is your first dataset)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    # First plot: Approximate values of n from NR solution
+    sns.scatterplot(x=frequencies, y=n1, label="n1 values", ax=ax1)
+    sns.scatterplot(x=frequencies, y=n2, label="n2 values", ax=ax1)
+    ax1.set_title('Approximate values of n')
+    ax1.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+    ax1.set_xlabel('Frequencies [THz]')
+
+
+    sns.scatterplot(x=frequencies, y=k1, label="k1 values", ax=ax2)
+    sns.scatterplot(x=frequencies, y=k2, label="k2 values", ax=ax2)
+    ax2.set_title('Approximate values of k')
+    ax2.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+    ax2.set_xlabel('Frequencies [THz]')
+
+    # Adjust layout and add main title if needed
+    plt.suptitle('Comparison of Material Parameters', y=1.02)
+    plt.tight_layout()
+    plt.legend()
+    plt.show()

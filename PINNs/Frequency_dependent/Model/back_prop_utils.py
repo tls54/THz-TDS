@@ -27,7 +27,14 @@ def H_th_function(n_complex, w, length):
     '''
 
     
-    return (4 * n_complex) / ((n_complex + 1) ** 2) * torch.exp(-1j * (n_complex - 1) * w * length/ c)
+    return (4 * n_complex) / ((n_complex + 1) ** 2) * torch.exp((-1j * (n_complex - 1) * w * length) / c)
+
+
+
+# Define analytical derivative of H_theoretical
+def H_prime_function(n, w, Length):
+    return (1 / n) - (2 / (n + 1)) - 1j * w * Length / c
+
 
 
 ## Grid search function
@@ -77,6 +84,51 @@ def grid_search(n0, k0, d0, H_values, phi_values, freqs_ang, H_th_function, loss
                     print(f"{n_pred=:.2f}, {k_pred=:.3f}, {d_pred=:.4f}, Loss: {l:.6f}")
 
     return best_params, min_loss
+
+
+
+# Define NR function to test and compare methods
+import numpy as np
+
+def newton_raphson_fitting(H_th_function, H_prime_function, f_interp, A_exp, ph_extrapolated, Length, n_0=3.7 + 0.1j, max_iterations=10):
+    """
+    Perform Newton-Raphson fitting to extract refractive indices.
+    
+    Parameters:
+    - H_th_function: Function computing the theoretical transfer function.
+    - H_prime_function: Function computing the derivative of the transfer function.
+    - f_interp: Interpolated frequency array (in THz).
+    - A_exp: Experimental amplitude array.
+    - ph_extrapolated: Experimental phase array.
+    - Length: Sample thickness.
+    - c: Speed of light.
+    - n_0: Initial guess for the refractive index.
+    - max_iterations: Maximum number of Newton-Raphson iterations.
+    
+    Returns:
+    - n_extracted: Extracted complex refractive indices.
+    """
+    frequencies = len(f_interp)
+    n_extracted = np.zeros(frequencies, dtype=complex)
+    
+    for f_index in range(frequencies):
+        n_next = n_0  # Reset n_next for each frequency index
+        for _ in range(max_iterations):
+            w = 2 * np.pi * f_interp * 1e12  # Convert to angular frequency in radians/sec
+            H_th = H_th_function(n_next, w, length=Length)
+            A_th = np.abs(H_th)
+            ph_th = np.unwrap(np.angle(H_th))
+            
+            # Function to optimize: Compute TF values in the log space
+            fun = np.log(A_th[f_index]) - np.log(A_exp[f_index]) + 1j * ph_th[f_index] - 1j * ph_extrapolated[f_index]
+            fun_prime = H_prime_function(n_next, 2 * np.pi * f_interp[f_index] * 1e12, Length=Length)
+            
+            # Newton-Raphson update step
+            n_next = n_next - fun / fun_prime
+        
+        n_extracted[f_index] = n_next
+    
+    return n_extracted
 
 
 
