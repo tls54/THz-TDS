@@ -1,2 +1,0 @@
-from .models_avg import AverageTransferFunctionModel
-from .model_freq_dep import FrequencyDependentModel, IndependentFrequencyModel
