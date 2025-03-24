@@ -32,7 +32,12 @@ These are optimized to reconstruct the experimental transfer function provided.
 A class designed to treat experimental data in the time domain. Check notebook for usage example.  
 `PINNs:`  
 - `Model:` Classes and utility files for back-propagation driven fitting.
-- `data:` Contains two pulses through 3mm silicon, data from NR extraction on this experiment and an example of a sequential version of the back-propagation model.
+- `data:` Contains two pulses through 3mm silicon, data from NR extraction on this experiment and an example of a sequential version of the back-propagation model.  
+
+`Notebooks:` Shows the treatment of experimental data on the Si datasets, and uses an NR numerical fit to find n and k.  
+
+`Transfer Matrix Methods:` Uses Transfer matrix methods to simulate time domain pulses for media with multiple layers of different materials and thicknesses.
+
 
 ## Getting Started
 
