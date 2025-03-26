@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from Matrix_methods.Simulate import simulate_parallel, simulate_reference
+from .Simulate import simulate_parallel, simulate_reference
 from time import perf_counter
+
+
 
 # Define loss function for model
 def gen_loss_function(y_simulated, y_exp, alpha:float):
@@ -12,7 +14,7 @@ def gen_loss_function(y_simulated, y_exp, alpha:float):
         return alpha * torch.nn.functional.mse_loss(y_simulated, y_exp)
 
 
-
+## General optimizer to find n,k and D (thickness) in the time domain
 class TimeDomainExtractor(nn.Module):
     def __init__(self, reference_pulse, experimental_pulse, deltat, n_init, k_init, D_init, lr=1e-3):
         super().__init__()
@@ -57,7 +59,7 @@ class TimeDomainExtractor(nn.Module):
         """
         return gen_loss_function(y_simulated, self.experimental_pulse, alpha)
 
-    def optimize(self, num_iterations=100, verbose=True, updates=10, alpha=10):
+    def optimize(self, num_iterations=100, verbose=True, updates=10, alpha=1):
         print(f'Optimizing for {num_iterations} with loss multiplier {alpha}.')
         for iteration in range(num_iterations):
             self.optimizer.zero_grad()
@@ -99,7 +101,7 @@ class TimeDomainExtractor(nn.Module):
 
 
 
-
+## Optimizer for known thickness to find n,k
 class TimeDomainExtractorNK(nn.Module):
     def __init__(self, reference_pulse, experimental_pulse, deltat, n_init, k_init, D, lr=1e-3):
         super().__init__()
@@ -137,13 +139,13 @@ class TimeDomainExtractorNK(nn.Module):
         
         return y_simulated
 
-    def loss_function(self, y_simulated):
+    def loss_function(self, y_simulated, alpha):
         """
         Computes the loss function.
         """
-        return 10 * torch.nn.functional.mse_loss(y_simulated, self.experimental_pulse)
+        return gen_loss_function(y_simulated, self.experimental_pulse, alpha)
 
-    def optimize(self, num_iterations=100, verbose=True, updates=10):
+    def optimize(self, num_iterations=100, verbose=True, updates=10, alpha=1):
         for iteration in range(num_iterations):
             self.optimizer.zero_grad()
             stop, start = 0,0
@@ -154,7 +156,7 @@ class TimeDomainExtractorNK(nn.Module):
             self.forward_time = stop - start
             stop, start = 0,0
             
-            loss = self.loss_function(y_simulated)
+            loss = self.loss_function(y_simulated, alpha)
             start = perf_counter()
             loss.backward()
             stop = perf_counter()
@@ -185,7 +187,6 @@ class TimeDomainExtractorNK(nn.Module):
 
 
 ## Extractor for known n,k to find thickness
-
 class TimeDomainExtractorD(nn.Module):
     def __init__(self, reference_pulse, experimental_pulse, deltat, n, k, D_init, lr=1e-3):
         super().__init__()
@@ -221,13 +222,13 @@ class TimeDomainExtractorD(nn.Module):
         
         return y_simulated
 
-    def loss_function(self, y_simulated):
+    def loss_function(self, y_simulated, alpha):
         """
         Computes the loss function.
         """
-        return 10 * torch.nn.functional.mse_loss(y_simulated, self.experimental_pulse)
+        return gen_loss_function(y_simulated, self.experimental_pulse, alpha)
 
-    def optimize(self, num_iterations=1000, verbose=True, updates=100):
+    def optimize(self, num_iterations=100, verbose=True, updates=10, alpha=1):
         for iteration in range(num_iterations):
             self.optimizer.zero_grad()
             stop, start = 0,0
@@ -238,7 +239,7 @@ class TimeDomainExtractorD(nn.Module):
             self.forward_time = stop - start
             stop, start = 0,0
             
-            loss = self.loss_function(y_simulated)
+            loss = self.loss_function(y_simulated, alpha)
             start = perf_counter()
             loss.backward()
             stop = perf_counter()
@@ -262,3 +263,5 @@ class TimeDomainExtractorD(nn.Module):
                 print(f"Iteration {iteration}, Loss: {loss.item()}, D: {self.log_D.exp().item()}")
 
         return self.best_log_D.exp().item()
+    
+

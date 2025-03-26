@@ -16,8 +16,6 @@ def simulate_reference(L, deltat):
     return x
 
 
-
-
 def rts(n0, nj, Dj):
     """
     Computes the reflection and transmission coefficients for a single layer.
