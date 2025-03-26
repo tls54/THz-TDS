@@ -196,10 +196,11 @@ class TimeDomainExtractorD(nn.Module):
 
         self.deltat = deltat
 
-        # Trainable parameters
         self.n = n
         self.k = k
-        self.log_D = nn.Parameter(torch.tensor(D_init).log())  # Train log(D) to ensure positivity
+
+        # Trainable parameters
+        self.log_D = nn.Parameter(torch.tensor(D_init, dtype=torch.float32).log()) # Train log(D) to ensure positivity
 
         # Optimizer
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
@@ -209,15 +210,16 @@ class TimeDomainExtractorD(nn.Module):
         self.best_loss = float('inf')
 
         # Store best parameters
-        self.best_log_D = self.log_D.clone().detach()
+        self.best_D = self.log_D.clone().detach()
 
     def forward(self):
         """
         Simulates the time-domain response based on current n, k, and D.
         """
-        D = self.log_D.exp()  # Convert back to ensure positivity
-        y_simulated = simulate_parallel(self.reference_pulse, [(self.n + 1j*self.k, D)], self.deltat, noise_level=0.002)[1]
+        #D = self.log_D.exp()  # Convert back to ensure positivity
+        y_simulated = simulate_parallel(self.reference_pulse, [(self.n + 1j*self.k, self.log_D.exp())], self.deltat, noise_level=0.002)[1]
 
+        # Truncate to ref pulse length
         y_simulated = y_simulated[:len(self.reference_pulse)]
         
         return y_simulated
@@ -257,11 +259,11 @@ class TimeDomainExtractorD(nn.Module):
             # Store best parameters if loss improves
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()
-                self.best_log_D = self.log_D.clone().detach()
+                self.best_D = self.log_D.exp().clone().detach()
 
             if verbose and iteration % updates == 0:
                 print(f"Iteration {iteration}, Loss: {loss.item()}, D: {self.log_D.exp().item()}")
 
-        return self.best_log_D.exp().item()
+        return self.best_D.item()
     
 
