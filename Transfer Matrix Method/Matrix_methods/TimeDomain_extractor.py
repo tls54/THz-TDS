@@ -9,7 +9,8 @@ from time import perf_counter
 # Define loss function for model
 def gen_loss_function(y_simulated, y_exp, alpha:float):
         """
-        Computes the loss function.
+        Computes the loss function. 
+        alpha is an aditional scaling factor that can help with gradient decent.
         """
         return alpha * torch.nn.functional.mse_loss(y_simulated, y_exp)
 
