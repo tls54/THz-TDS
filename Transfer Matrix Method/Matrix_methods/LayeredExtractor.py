@@ -79,7 +79,7 @@ class LayeredExtractor(nn.Module):
                 self.best_k_params = [k.clone().detach() for k in self.k_params]
                 self.best_log_D_params = [log_D.clone().detach() for log_D in self.log_D_params]
 
-            if verbose and iteration % updates == 0:
+            if verbose and (iteration + 1) % updates == 0:
                 layer_info = ", ".join([f"Layer {j}: n={n.item()}, k={k.item()}, D={log_D.exp().item()}"
                 for j, (n, k, log_D) in enumerate(zip(self.n_params, self.k_params, self.log_D_params))])
                 print(f"Iteration {iteration}, Loss: {loss.item()}, {layer_info}")
@@ -156,7 +156,7 @@ class LayeredExtractorNK(nn.Module):
                 self.best_n_params = [n.clone().detach() for n in self.n_params]
                 self.best_k_params = [k.clone().detach() for k in self.k_params]
 
-            if verbose and iteration % updates == 0:
+            if verbose and (iteration + 1) % updates == 0:
                 layer_info = ", ".join([f"Layer {j}: n={n.item()}, k={k.item()}, D={D}"
                 for j, (n, k, D) in enumerate(zip(self.n_params, self.k_params, self.D_values))])
                 print(f"Iteration {iteration}, Loss: {loss.item()}, {layer_info}")
@@ -228,7 +228,7 @@ class LayeredExtractorD(nn.Module):
                 self.best_loss = loss.item()
                 self.best_log_D_params = [log_D.clone().detach() for log_D in self.log_D_params]
 
-            if verbose and iteration % updates == 0:
+            if verbose and (iteration + 1) % updates == 0:
                 layer_info = ", ".join([f"Layer {j}: n={n}, k={k}, D={log_D.exp().item()}"
                 for j, (n, k, log_D) in enumerate(zip(self.n_values, self.k_values, self.log_D_params))])
                 print(f"Iteration {iteration}, Loss: {loss.item()}, {layer_info}")
