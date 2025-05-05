@@ -3,6 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+sns.set_style("white")  
 
 ## Plot training history
 def plot_training_progress(loss_plot, n_actual=None, k_actual=None, thickness=None):
@@ -29,10 +30,10 @@ def plot_training_progress(loss_plot, n_actual=None, k_actual=None, thickness=No
     min_epoch = np.argmin(loss_plot)
 
     # Set Seaborn theme
-    sns.set_theme(style="darkgrid")
+
 
     # Create a 2×2 grid of subplots
-    fig, axs = plt.subplots(1, 2, figsize=(14, 6), sharex=True)
+    fig, axs = plt.subplots(1, 2, figsize=(12, 4), sharex=True)
 
     # Plot raw loss
     sns.lineplot(x=epochs, y=loss_plot, ax=axs[0], label="Loss")
@@ -75,23 +76,25 @@ def plot_transfer(frequencies, absolute_values, phase_values, absolute_values_cl
         params (list or None, optional): List containing [n, k, thickness] if available.
     """
     
-    fig, axs = plt.subplots(1, 2, figsize=(20, 5))
-
+    fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+#    for ax in axs:
+#        for spine in ax.spines.values():
+#            spine.set_visible(False)
     # Plot phase values
     axs[0].plot(frequencies, phase_values, label='Phase values')
 
     if phase_values_clean is not None:
         axs[0].scatter(frequencies, phase_values_clean, s=8, label='Clean phase values')
-    axs[0].set_title('Phase of transfer function')
+    axs[0].set_title('Unwrapped Phase of Transfer Function')
     axs[0].set_xlabel('Frequencies [THz]')
     axs[0].set_ylabel('Angle [Rad]')
     axs[0].legend()
 
     # Plot absolute values
-    axs[1].scatter(frequencies, absolute_values, s=8, label='Absolute values')
+    axs[1].scatter(frequencies, absolute_values, s=4, label='Absolute values')
     if absolute_values_clean is not None:
         axs[1].scatter(frequencies, absolute_values_clean, s=8, label='Clean absolute values')
-    axs[1].set_title('Absolute value of transfer function')
+    axs[1].set_title('Absolute Value of Transfer Function')
     axs[1].set_xlabel('Frequencies [THz]')
     axs[1].set_ylabel('|H|')
     axs[1].legend()
@@ -127,7 +130,7 @@ def plot_loss_contributions(phase_loss, abs_loss):
     min_iter = np.argmin(total_loss)
 
     # Set Seaborn theme
-    sns.set_theme(style="darkgrid")
+
 
     # Create a 1×2 grid of subplots
     fig, axs = plt.subplots(1, 2, figsize=(14, 5), sharex=True)
@@ -175,17 +178,17 @@ def plot_comparison(frequencies, exp_abs, exp_phase, pred_abs, pred_phase, param
     fig, axs = plt.subplots(1, 2, figsize=(20, 5))
 
     # Plot phase values
-    axs[0].plot(frequencies, exp_phase, label='Experimental phase', alpha=0.7)
-    axs[0].plot(frequencies, pred_phase, label='Predicted phase', alpha=0.7)
-    axs[0].set_title('Unwrapped phase of transfer function')
+    axs[0].plot(frequencies, exp_phase, label='Experimental phase', alpha=1, linewidth=2)
+    axs[0].plot(frequencies, pred_phase, label='Predicted phase', alpha=1, linewidth=2)
+    axs[0].set_title('Unwrapped Phase of Transfer Function')
     axs[0].set_xlabel('Frequencies [THz]')
     axs[0].set_ylabel('Angle [Rad]')
     axs[0].legend()
 
     # Plot absolute values
-    axs[1].scatter(frequencies, exp_abs, s=8, label='Experimental |H|', alpha=0.7)
+    axs[1].scatter(frequencies, exp_abs, s=20, label='Experimental |H|', alpha=1)
     axs[1].scatter(frequencies, pred_abs, s=8, label='Predicted |H|', alpha=0.7)
-    axs[1].set_title('Absolute value of transfer function')
+    axs[1].set_title('Absolute Value of Transfer Function')
     axs[1].set_xlabel('Frequencies [THz]')
     axs[1].set_ylabel('|H|')
     axs[1].legend()
@@ -203,22 +206,23 @@ def plot_comparison(frequencies, exp_abs, exp_phase, pred_abs, pred_phase, param
 ## Plot frequency dependence of material parameters
 def plot_material_params(frequencies, n, k):
     # Create the first subplot (assuming 'data1' is your first dataset)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
     # First plot: Approximate values of n from NR solution
     sns.scatterplot(x=frequencies, y=n, label="n values", ax=ax1)
-    ax1.set_title('Approximate values of n')
+    ax1.set_title('Approximate Values of n')
     ax1.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
     ax1.set_xlabel('Frequencies [THz]')
+    ax1.set_ylabel('n values')
 
     # Second plot (assuming 'data2' is your second dataset with x and y values)
     sns.scatterplot(x=frequencies, y=k, label="k values", ax=ax2)
-    ax2.set_title('Approximate values of k')
+    ax2.set_title('Approximate Values of k')
     ax2.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
     ax2.set_xlabel('Frequencies [THz]')
+    ax2.set_ylabel('k values')
 
     # Adjust layout and add main title if needed
-    plt.suptitle('Material Parameters', y=1.02)
+    plt.suptitle('Material Parameters of 3mm Si Sample', y=1.02)
     plt.tight_layout()
     plt.legend()
     plt.show()
@@ -226,19 +230,19 @@ def plot_material_params(frequencies, n, k):
 ## Define method to compare material parameters
 def compare_material_params(frequencies, n1, k1, n2, k2):
     # Create the first subplot (assuming 'data1' is your first dataset)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 
     # First plot: Approximate values of n from NR solution
-    sns.scatterplot(x=frequencies, y=n1, label="n1 values", ax=ax1)
-    sns.scatterplot(x=frequencies, y=n2, label="n2 values", ax=ax1)
-    ax1.set_title('Approximate values of n')
+    sns.scatterplot(x=frequencies, y=n1, label="NR Solution", ax=ax1)
+    sns.scatterplot(x=frequencies, y=n2, label="Gradient Solution", ax=ax1)
+    ax1.set_title('Values of n')
     ax1.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
     ax1.set_xlabel('Frequencies [THz]')
 
 
-    sns.scatterplot(x=frequencies, y=k1, label="k1 values", ax=ax2)
-    sns.scatterplot(x=frequencies, y=k2, label="k2 values", ax=ax2)
-    ax2.set_title('Approximate values of k')
+    sns.scatterplot(x=frequencies, y=k1, label="NR Solution", ax=ax2)
+    sns.scatterplot(x=frequencies, y=k2, label="Gradient Solution", ax=ax2)
+    ax2.set_title('Values of k')
     ax2.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
     ax2.set_xlabel('Frequencies [THz]')
 
