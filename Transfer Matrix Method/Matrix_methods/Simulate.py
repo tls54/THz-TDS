@@ -36,7 +36,7 @@ def rts(n0, nj, Dj):
     propagation through the layer and Fresnel coefficients for reflections.
     """
 
-    c = torch.cos(nj * Dj)  # Cosine of phase shift
+    c = torch.cos(nj * Dj)  # Cosine of phase shift (nj Dj is optical path)
     s = torch.sin(nj * Dj)  # Sine of phase shift
     d = c + (0.5j) * (nj / n0 + n0 / nj) * s  # Denominator term
     r = (0.5j) * s * (n0 / nj - nj / n0) / d  # Reflection coefficient
@@ -46,115 +46,142 @@ def rts(n0, nj, Dj):
 
 
 
-def RTm(m, n0, layers):
+def RTm_batch(n0, nj, Dj):
     """
-    Computes the overall reflection (R) and transmission (T) coefficients 
-    for a stack of m layers using the transfer matrix method.
-
+    Batched version of RTm.
     Args:
-        m (int): Number of layers.
-        n0 (torch.Tensor): Refractive index of the incident medium.
-        layers (list of tuples): Each tuple contains:
-            - `nj` (torch.Tensor): Refractive index of the j-th layer.
-            - `Dj` (torch.Tensor): Thickness of the j-th layer.
+        n0: complex scalar (incident index)
+        nj: Tensor of shape (m,) - refractive indices of each layer
+        Dj: Tensor of shape (K, m) - phase shifts per frequency per layer
 
     Returns:
-        Tuple[torch.Tensor, torch.Tensor]:
-        - R: Total reflection coefficient of the stack.
-        - T: Total transmission coefficient of the stack.
-
-    The function iteratively applies the transfer matrix method by combining 
-    the effects of multiple layers, each contributing a phase shift and partial 
-    reflection/transmission. The final result gives the net reflection and 
-    transmission of the multi-layer system.
+        T: Tensor of shape (K,) - frequency-dependent transmission coefficient
     """
+    K, m = Dj.shape
+    dtype = torch.cfloat
+    device = Dj.device
 
-    U = torch.tensor(0.0, dtype=torch.cfloat)
-    V = torch.tensor(1.0, dtype=torch.cfloat)
-    T = torch.tensor(1.0, dtype=torch.cfloat)
-    R = torch.tensor(0.0, dtype=torch.cfloat)
+    U = torch.zeros(K, dtype=dtype, device=device)
+    V = torch.ones(K, dtype=dtype, device=device)
+    T = torch.ones(K, dtype=dtype, device=device)
 
     for j in range(m):
-        nj, Dj = layers[j]  # Extract layer properties
-        r, t, s = rts(n0, nj, Dj)  # Get layer coefficients
+        njj = nj[j]  # Scalar complex
+        Dj_j = Dj[:, j]  # Shape (K,)
 
-        Vlast = V.clone()  # Store previous V
-        U, V = r * V + s * U, V - r * U  # Update U and V
+        c = torch.cos(njj * Dj_j)
+        s = torch.sin(njj * Dj_j)
+        d = c + 0.5j * (njj / n0 + n0 / njj) * s
+        r = 0.5j * s * (n0 / njj - njj / n0) / d
+        t = 1.0 / d
 
-        T = T * t * Vlast / V  # Update transmission coefficient
-        R = U / V  # Compute reflection coefficient
+        Vlast = V.clone()
+        U, V = r * V + (t * t - r * r) * U, V - r * U
+        T = T * t * Vlast / V
 
-    return R, T
-
-
+    return T
 
 
 # Simulate reference pulse through material, add some noise
 def simulate_parallel(x, layers, deltat, noise_level=None):
     """
-    Simulates the propagation of a reference pulse through a layered medium using 
-    the transfer matrix method and Fourier domain computations.
+    Simulates the time-domain transmission of a THz pulse through a multilayer material system using
+    the transfer matrix method, fully vectorized over frequency components.
 
     Args:
-        x (torch.Tensor): Time-domain reference pulse (1D array).
-        layers (list of tuples): Each tuple contains:
-            - `nj` (torch.Tensor or float): Refractive index of the j-th layer.
-            - `Dj` (torch.Tensor or float): Thickness of the j-th layer.
-        deltat (float): Time step between samples in the reference pulse.
-        noise_level (float, optional): Standard deviation of Gaussian noise.
+        x (Tensor): Real input pulse in the time domain, shape (L,).
+        layers (list of tuples): Each tuple represents a layer and is of the form (n, d),
+            where:
+                - n is a complex refractive index (can be a scalar or torch.tensor).
+                - d is the thickness in meters (can be a scalar or torch.tensor).
+        deltat (float): Time step between samples in the time-domain pulse (in seconds).
+        noise_level (float, optional): Standard deviation of additive Gaussian noise
+            to be added to the output signal. If None, no noise is added.
 
     Returns:
-        Tuple[torch.Tensor, torch.Tensor]:
-        - T: Transmission coefficients in the frequency domain.
-        - y: Simulated time-domain signal after propagation.
-    """
+        T (Tensor): Frequency-domain transmission coefficients, shape (N,), complex-valued.
+        y (Tensor): Simulated real-valued time-domain transmitted signal, shape (N,).
     
-    L = len(x)
+    Notes:
+        - The input signal x is zero-padded to length N = 4 * L for FFT-based convolution.
+        - Transmission coefficients are computed for all positive frequencies using a batched
+        implementation of the transfer matrix method, then extended to full spectrum
+        via Hermitian symmetry to ensure a real-valued time-domain output.
+        - Designed for efficient use on GPU and differentiable with PyTorch autograd.
+    """
 
-    # Define FFT sizes
+
+    L = len(x)
     M = 2 * L
     N = 4 * L
 
-    # Wave number increment per frequency step
+    device = x.device
+    dtype = torch.cfloat
+
     deltaf = 1.0 / (N * deltat)
-    dk = 2 * torch.pi * deltaf / c  
+    dk = 2 * torch.pi * deltaf / c
+    K = M + 1  # Number of forward frequency samples
 
-    # Convert layer parameters into tensors, preserving autograd tracking
-    device = x.device  # Ensure compatibility with input tensor
-    indices = torch.stack([l[0] if isinstance(l[0], torch.Tensor) else torch.tensor(l[0], dtype=torch.cfloat, device=device, requires_grad=True) for l in layers])
-
-    thicknesses = torch.stack([l[1] if isinstance(l[1], torch.Tensor) else torch.tensor(l[1], dtype=torch.cfloat, device=device, requires_grad=True) for l in layers])
-
+    # Convert to tensor and ensure gradient tracking
+    indices = torch.stack([
+        l[0] if isinstance(l[0], torch.Tensor) else torch.tensor(l[0], dtype=dtype, device=device, requires_grad=True)
+        for l in layers
+    ])
+    thicknesses = torch.stack([
+        l[1] if isinstance(l[1], torch.Tensor) else torch.tensor(l[1], dtype=dtype, device=device, requires_grad=True)
+        for l in layers
+    ])
     m = len(layers)
 
-    # Initialize transmission coefficients array
-    T = torch.zeros(N, dtype=torch.cfloat, device=device)
+    # Vectorized kD: shape (K, m)
+    k_vals = torch.arange(0, K, dtype=torch.float32, device=device)
+    Dj = dk * k_vals[:, None] * thicknesses[None, :]  # (K, m)
 
-    # Compute frequency-dependent transmission coefficients
-    for k in range(M + 1):
-        kD = k * dk * thicknesses  # Compute phase shifts per layer
-        nkD = [(indices[l], kD[l]) for l in range(m)]  # Refractive indices with phase shifts
-        T[k] = RTm(m, torch.tensor(1.0, dtype=torch.cfloat, device=device), nkD)[1]  
+    # Compute T across all frequencies
+    n0 = torch.tensor(1.0, dtype=dtype, device=device)
+    T_forward = RTm_batch(n0, indices, Dj)  # shape (K,)
 
-    # Ensure symmetry in Fourier domain
-    for k in range(1, M):  
-        T[N - k] = torch.conj(T[k])
+    # Build full T of length N using Hermitian symmetry
+    T = torch.zeros(N, dtype=dtype, device=device)
+    T[:K] = T_forward
+    T[-(M-1):] = torch.conj(T[1:M])  # Hermitian symmetry
 
-    # Zero-pad the input signal
-    z = torch.zeros(N, dtype=torch.float, device=device)
-    z[:L] = x[:L]
-
-    # Perform FFT on the input signal
+    # Pad signal and FFT
+    z = torch.zeros(N, dtype=torch.float32, device=device)
+    z[:L] = x
     X = torch.fft.fft(z) / N
 
-    # Apply transmission coefficients in the frequency domain
     Y = T * X
-
-    # Inverse FFT to get back to time domain
     y = N * torch.fft.ifft(Y).real
 
-    # Add Gaussian noise if specified
     if noise_level:
-        y += noise_level * torch.randn(N, dtype=torch.float, device=device)
+        y += noise_level * torch.randn(N, dtype=torch.float32, device=device)
 
     return T, y
+
+
+if __name__ == '__main__':
+    import time
+
+    # Simulation parameters
+    L = 2**12
+    deltat = 0.0194e-12
+
+    # Generate reference pulse
+    x = simulate_reference(L, deltat)
+
+    # Define a 3-layer system
+    layers = [
+        (torch.tensor(3.5 + 0.001j, dtype=torch.cfloat), torch.tensor(2e-3, dtype=torch.cfloat)),
+        (torch.tensor(2.8 + 0.0005j, dtype=torch.cfloat), torch.tensor(1.5e-3, dtype=torch.cfloat)),
+        (torch.tensor(4.0 + 0.002j, dtype=torch.cfloat), torch.tensor(1.0e-3, dtype=torch.cfloat)),
+    ]
+
+    # Time the function
+    t0 = time.perf_counter()
+    T, y = simulate_parallel(x, layers, deltat)
+    t1 = time.perf_counter()
+
+    print(f"simulate_parallel execution time: {t1 - t0:.4f} seconds")
+
+
