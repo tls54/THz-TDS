@@ -63,6 +63,6 @@ Look at Experimental_freq_dep.ipynb for implementation on experimental data.
 
 
 ## Contact
-Contact the Developer for enquiries and contributions.  
+Contact the developer for enquiries and contributions.  
 Developer: Theo Smith - tls1g21@soton.ac.uk
 
