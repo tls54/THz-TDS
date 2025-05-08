@@ -41,6 +41,8 @@ def rts(n0, nj, Dj):
     d = c + (0.5j) * (nj / n0 + n0 / nj) * s  # Denominator term
     r = (0.5j) * s * (n0 / nj - nj / n0) / d  # Reflection coefficient
     t = 1.0 / d  # Transmission coefficient
+    # note transmission coeff phase is relative to n0 and kD
+    # s phase which is used to compute reflection coeff is relative to input
     return r, t * torch.exp(1j * n0 * Dj), t * t - r * r
 
 
