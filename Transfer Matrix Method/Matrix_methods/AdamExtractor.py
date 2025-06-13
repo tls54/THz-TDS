@@ -103,7 +103,7 @@ class LayeredExtractor(nn.Module):
 
         for iteration in range(num_iterations):
             self.optimizer.zero_grad()
-            start = perf_counter()
+            start = perf_counter() # perf_counter for timing sections of optimization
             y_simulated = self.forward()
             self.forward_time = perf_counter() - start
 
@@ -137,7 +137,7 @@ class LayeredExtractor(nn.Module):
                     layer_info.append(f"Layer {i}: n={n.item():.4f}, k={k.item():.5f}, D={D.item()*1e6:.2f} µm")
                 print(f"Iteration {iteration}, Loss: {loss.item():.6e}, " + " | ".join(layer_info))
 
-        # Reconstruct best final values
+        # Reconstruct best final layers
         results = []
         n_idx = k_idx = D_idx = 0
         for i, (opt_n, opt_k, opt_D) in enumerate(self.optimize_mask):
@@ -147,6 +147,7 @@ class LayeredExtractor(nn.Module):
             if opt_n: n_idx += 1
             if opt_k: k_idx += 1
             if opt_D: D_idx += 1
-            results.append((n.item(), k.item(), D.item()))
+            complex_n = n + 1j * k
+            results.append((complex_n.item(), D.item()))
         return results
-    
+            
