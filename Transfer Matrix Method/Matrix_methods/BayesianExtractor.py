@@ -12,7 +12,7 @@ def gen_loss_function(y_simulated, y_exp, alpha: float):
 
 ## Bayesian optimization based on gaussian process regression is implemented with gp_minimize
 class BayesianLayeredExtractor():
-    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, lr=1e-2):
+    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, optimization_bounds=[0.1, 0.01, 0.15e-3]):
         super().__init__()
         self.reference_pulse = reference_pulse.clone().detach()
         self.experimental_pulse = experimental_pulse.clone().detach()
@@ -29,6 +29,9 @@ class BayesianLayeredExtractor():
             self.optimize_mask = [(True, True, True)] * self.num_layers
         else:
             self.optimize_mask = optimize_mask
+        
+        # Define optimization bounds
+        self.optimization_bounds = optimization_bounds
 
     def loss_function(self, y_simulated, alpha):
         return gen_loss_function(y_simulated, self.experimental_pulse, alpha)
@@ -67,11 +70,11 @@ class BayesianLayeredExtractor():
         bounds = []
         for kind, i in optimization_indices:
             if kind == 'n':
-                bounds.append((self.n_init[i] - 0.1, self.n_init[i] + 0.1))
+                bounds.append((self.n_init[i] - self.optimization_bounds[0], self.n_init[i] + self.optimization_bounds[0]))
             elif kind == 'k':
-                bounds.append((self.k_init[i] - 0.01, self.k_init[i] + 0.01))
+                bounds.append((self.k_init[i] - self.optimization_bounds[1], self.k_init[i] + self.optimization_bounds[1]))
             elif kind == 'D':
-                bounds.append((self.D_init[i] - 0.15e-3, self.D_init[i] + 0.15e-3))
+                bounds.append((self.D_init[i] - self.optimization_bounds[2], self.D_init[i] + self.optimization_bounds[2]))
 
         print("Search Boundaries for Optimized Parameters:")
         for (kind, i), b in zip(optimization_indices, bounds):
