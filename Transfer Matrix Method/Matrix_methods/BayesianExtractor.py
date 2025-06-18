@@ -5,7 +5,7 @@ from .Simulate import simulate_parallel
 
 
 # Define loss function for model
-def gen_loss_function(y_simulated, y_exp, alpha: float):
+def gen_loss_function(y_simulated, y_exp, alpha:float=1):
     return alpha * torch.sqrt(torch.nn.functional.mse_loss(y_simulated, y_exp))
 
 

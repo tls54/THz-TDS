@@ -8,7 +8,7 @@ import numpy as np
 # TODO: Change return method at the end to replicate the one in bayes model.
 
 # Define loss function for model
-def gen_loss_function(y_simulated, y_exp, alpha: float):
+def gen_loss_function(y_simulated, y_exp, alpha:float=1):
     """
     Computes the loss function.
     """
