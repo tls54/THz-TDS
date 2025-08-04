@@ -108,6 +108,8 @@ def simulate_parallel(x, layers, deltat, noise_level=None):
 
 if __name__ == '__main__':
     import time
+    import matplotlib.pyplot as plt
+
 
     # Simulation parameters
     L = 2**12
@@ -118,9 +120,9 @@ if __name__ == '__main__':
 
     # Define a 3-layer system
     layers = [
-        (torch.tensor(3.5 + 0.001j, dtype=torch.cfloat), torch.tensor(2e-3, dtype=torch.cfloat)),
-        (torch.tensor(2.8 + 0.0005j, dtype=torch.cfloat), torch.tensor(1.5e-3, dtype=torch.cfloat)),
-        (torch.tensor(4.0 + 0.002j, dtype=torch.cfloat), torch.tensor(1.0e-3, dtype=torch.cfloat)),
+        (torch.tensor(3.5 - 0.001j, dtype=torch.cfloat), torch.tensor(0.2e-3, dtype=torch.cfloat)),
+        (torch.tensor(2.8 - 0.0005j, dtype=torch.cfloat), torch.tensor(0.15e-3, dtype=torch.cfloat)),
+        (torch.tensor(4.0 - 0.002j, dtype=torch.cfloat), torch.tensor(0.10e-3, dtype=torch.cfloat)),
     ]
 
     # Time the function
@@ -130,4 +132,11 @@ if __name__ == '__main__':
 
     print(f"simulate_parallel execution time: {t1 - t0:.4f} seconds")
 
+    y = y[:L].detach().cpu().numpy()
+    plt.figure(figsize=(12,4))
+    plt.title('Time Domain of THz Pulse through single layered sample.')
+    plt.plot(x, label='Reference Pulse')
+    plt.plot(y, label='Sample Pulse')
+    plt.legend()
+    plt.show()
 
